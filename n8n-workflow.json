@@ -1,5 +1,5 @@
 {
-  "name": "Claude Wake Scheduler - Adelaide (Embedded Logic)",
+  "name": "Claude Wake Scheduler - Adelaide",
   "nodes": [
     {
       "parameters": {},
@@ -19,7 +19,7 @@
       "id": "cron-0630",
       "name": "Schedule: 6:30 AM",
       "type": "n8n-nodes-base.scheduleTrigger",
-      "typeVersion": 1.2,
+      "typeVersion": 1.1,
       "position": [240, 350]
     },
     {
@@ -32,7 +32,7 @@
       "id": "cron-1130",
       "name": "Schedule: 11:30 AM",
       "type": "n8n-nodes-base.scheduleTrigger",
-      "typeVersion": 1.2,
+      "typeVersion": 1.1,
       "position": [240, 450]
     },
     {
@@ -45,7 +45,7 @@
       "id": "cron-1630",
       "name": "Schedule: 4:30 PM",
       "type": "n8n-nodes-base.scheduleTrigger",
-      "typeVersion": 1.2,
+      "typeVersion": 1.1,
       "position": [240, 550]
     },
     {
@@ -58,7 +58,7 @@
       "id": "cron-2130",
       "name": "Schedule: 9:30 PM",
       "type": "n8n-nodes-base.scheduleTrigger",
-      "typeVersion": 1.2,
+      "typeVersion": 1.1,
       "position": [240, 650]
     },
     {
@@ -92,6 +92,8 @@
     },
     {
       "parameters": {
+        "mode": "manual",
+        "duplicateItem": false,
         "assignments": {
           "assignments": [
             {
@@ -144,7 +146,7 @@
         "chatId": "YOUR_CHAT_ID_HERE",
         "text": "=⚠️ **Claude Wake FAILED**\n\n🕐 Time: {{ $('Format Log Entry').item.json.timestamp }}\n❌ Exit Code: `{{ $('Format Log Entry').item.json.exitCode }}`\n\n📝 Output:\n```\n{{ $('Format Log Entry').item.json.output.substring(0, 500) }}\n```\n\n🔍 Full logs: `/app/logs/n8n-executions.log`",
         "additionalFields": {
-          "parse_mode": "Markdown"
+          "parseMode": "Markdown"
         }
       },
       "id": "telegram-alert",
