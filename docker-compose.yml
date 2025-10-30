@@ -10,7 +10,7 @@ services:
       - N8N_HOST=0.0.0.0
       - N8N_PORT=5678
       - N8N_PROTOCOL=http
-      - WEBHOOK_URL=http://localhost:5678/
+      - WEBHOOK_URL=https://n8nautomation-production-7a8c.up.railway.app
       - N8N_BASIC_AUTH_ACTIVE=true
       - N8N_BASIC_AUTH_USER=admin
       - N8N_BASIC_AUTH_PASSWORD=changeme123
@@ -21,11 +21,6 @@ services:
       - claude-auth:/home/node/.anthropic
       - ./logs:/app/logs
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:5678/healthz"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
 
 volumes:
   n8n-data:

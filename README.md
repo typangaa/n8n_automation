@@ -72,11 +72,31 @@ TZ=Australia/Adelaide
 N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
 ```
 
-**Step 3: Redeploy**
+**Step 3: Validate Variables (IMPORTANT!)**
 
-After adding variables:
-- Click **Deploy** → **Redeploy** (or Railway will auto-redeploy)
-- Wait for deployment to complete
+Before deploying, verify you have set these variables correctly:
+
+✅ **Required Variables Checklist** (9 total):
+- [ ] `WEBHOOK_URL` - Ends with `/` (slash)
+- [ ] `N8N_EDITOR_BASE_URL` - NO trailing slash
+- [ ] `N8N_PROTOCOL` - Set to `https`
+- [ ] `N8N_HOST` - Hostname only (no https://)
+- [ ] `N8N_BASIC_AUTH_ACTIVE` - Set to `true`
+- [ ] `N8N_BASIC_AUTH_USER` - Set to `admin`
+- [ ] `N8N_BASIC_AUTH_PASSWORD` - Changed from default!
+- [ ] `GENERIC_TIMEZONE` - Set to `Australia/Adelaide`
+- [ ] `TZ` - Set to `Australia/Adelaide`
+
+❌ **DO NOT Set These** (causes errors):
+- `PORT` - Railway auto-assigns this
+- `N8N_PORT` - Conflicts with Railway
+- `N8N_HOST=0.0.0.0` - Forces localhost mode
+
+**Step 4: Deploy**
+
+- Railway will auto-redeploy when detecting changes
+- OR manually: Click **Deploy** → **Redeploy**
+- Wait 2-3 minutes for deployment
 - Access n8n at: https://n8nautomation-production-7a8c.up.railway.app
 
 ### 2. Import Workflow to n8n
@@ -402,31 +422,6 @@ cat /app/logs/wake.log
 - Restart deployment (Deploy → Redeploy)
 - Clear build cache (Settings → Clear Cache)
 - Check for conflicting environment variables
-
-### Health Check Configuration
-
-**Current Setup (Already Configured ✅)**
-
-Railway is configured to check n8n's built-in health endpoint:
-
-```toml
-# railway.toml
-healthcheckPath = "/healthz"
-healthcheckTimeout = 600  # 10 minutes
-```
-
-**How it Works:**
-1. Railway hits: `https://n8nautomation-production-7a8c.up.railway.app/healthz`
-2. n8n responds with: `{"status": "ok"}` when ready
-3. Railway marks service as healthy and routes traffic
-
-**Why This is Needed:**
-- ✅ Prevents "train has not arrived" errors
-- ✅ Ensures n8n fully starts before accepting traffic
-- ✅ Waits for database migrations to complete
-- ✅ 600s timeout allows for slow npm installs
-
-**You don't need to change anything** - this is already correctly configured!
 
 ## File Structure
 
