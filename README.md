@@ -304,11 +304,72 @@ cat /app/logs/wake.log
 - xvfb missing: Ensure `RUN apk add --no-cache xvfb` in Dockerfile
 - Token expired: Re-authenticate with `xvfb-run claude`
 
-### n8n Not Starting
+### Railway Deployment Errors
+
+#### "The train has not arrived at the station"
+
+**Symptom:** Railway shows "Not Found" or "Train has not arrived" error when accessing URL
+
+**Causes & Solutions:**
+
+1. **Container not starting properly**
+   ```bash
+   # Check Railway logs:
+   # 1. Go to Railway → Your Project → Deployments
+   # 2. Click on latest deployment → View Logs
+   # 3. Look for error messages
+   ```
+
+2. **Missing environment variables**
+   - Verify all required variables are set (see .env.example)
+   - Especially check: `WEBHOOK_URL`, `N8N_EDITOR_BASE_URL`, `N8N_PROTOCOL`
+
+3. **Build failed**
+   - Check Build Logs tab for errors
+   - Common issue: npm install timeout (try redeploying)
+   - Docker build error (check Dockerfile syntax)
+
+4. **Health check failing**
+   - n8n takes 30-60 seconds to start
+   - Wait 2-3 minutes after deployment
+   - Check logs for "Editor is now accessible via..."
+
+5. **Port binding issue**
+   - Railway auto-assigns PORT variable
+   - **Do NOT** set `N8N_PORT` or `PORT` manually
+   - n8n will automatically use Railway's PORT
+
+6. **Domain not provisioned yet**
+   - After generating domain, wait 2-5 minutes
+   - Try regenerating domain (Settings → Networking → Generate Domain)
+   - Clear browser cache and try again
+
+**Quick Fix Steps:**
+```bash
+1. Delete all environment variables in Railway
+2. Re-add only these:
+   - N8N_BASIC_AUTH_ACTIVE=true
+   - N8N_BASIC_AUTH_USER=admin
+   - N8N_BASIC_AUTH_PASSWORD=your-password
+   - GENERIC_TIMEZONE=Australia/Adelaide
+   - TZ=Australia/Adelaide
+3. DO NOT set: N8N_HOST, N8N_PORT, PORT
+4. Redeploy
+5. Wait 3 minutes
+6. Access Railway URL
+```
+
+#### n8n Container Crashes on Startup
 
 **Check Railway logs:**
-- Port 5678 binding error? Check `N8N_PORT` env var
-- Database migration error? Delete volumes and redeploy
+- Port binding error? Remove `N8N_PORT` env var (Railway handles this)
+- Database migration error? Check n8n version compatibility
+- Permission error? Check file ownership in Dockerfile
+
+**Common fixes:**
+- Restart deployment (Deploy → Redeploy)
+- Clear build cache (Settings → Clear Cache)
+- Check for conflicting environment variables
 
 ## File Structure
 
@@ -318,7 +379,9 @@ n8n_automation/
 ├── wake_claude.sh          # Wake script with logging
 ├── n8n-workflow.json       # Importable workflow (4 schedules)
 ├── docker-compose.yml      # Local testing setup
-├── .railway.json           # Railway deployment config
+├── .railway.json           # Railway deployment config (deprecated, use railway.toml)
+├── railway.toml            # Railway configuration with health checks
+├── .env.example            # Environment variables reference
 └── README.md               # This file
 ```
 
