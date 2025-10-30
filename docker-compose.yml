@@ -1,0 +1,11 @@
+version: '3.8'
+services:
+  claude-wake:
+    build: .
+    container_name: claude-wake
+    volumes:
+      - claude-data:/root/.anthropic
+    restart: unless-stopped
+
+volumes:
+  claude-data:

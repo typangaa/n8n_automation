@@ -1,0 +1,24 @@
+{
+  "build": {
+    "builder": "dockerfile"
+  },
+  "start": "bash /app/entrypoint.sh",
+  "cron": [
+    {
+      "schedule": "30 6 * * *",
+      "command": "bash /app/wake_claude.sh"
+    },
+    {
+      "schedule": "30 11 * * *",
+      "command": "bash /app/wake_claude.sh"
+    },
+    {
+      "schedule": "30 16 * * *",
+      "command": "bash /app/wake_claude.sh"
+    },
+    {
+      "schedule": "30 21 * * *",
+      "command": "bash /app/wake_claude.sh"
+    }
+  ]
+}
