@@ -4,7 +4,6 @@
     "builder": "dockerfile"
   },
   "deploy": {
-    "startCommand": "n8n start",
     "restartPolicyType": "always"
   }
 }
