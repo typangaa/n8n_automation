@@ -1,228 +1,204 @@
 {
-  "name": "Claude Wake Scheduler - Adelaide",
+  "name": "Claude Wake Scheduler - Adelaide (Embedded Logic)",
   "nodes": [
     {
-      "parameters": {
-        "rule": {
-          "interval": [
-            {
-              "field": "cronExpression",
-              "expression": "30 6 * * *"
-            }
-          ],
-          "timezone": "Australia/Adelaide"
-        }
-      },
-      "id": "schedule-0630",
-      "name": "Schedule 6:30 AM",
-      "type": "n8n-nodes-base.scheduleTrigger",
-      "typeVersion": 1.2,
-      "position": [240, 200]
+      "parameters": {},
+      "id": "manual-trigger",
+      "name": "Manual Trigger (Test)",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [240, 250]
     },
     {
       "parameters": {
         "rule": {
-          "interval": [
-            {
-              "field": "cronExpression",
-              "expression": "30 11 * * *"
-            }
-          ],
+          "interval": [{ "field": "cronExpression", "expression": "30 6 * * *" }],
           "timezone": "Australia/Adelaide"
         }
       },
-      "id": "schedule-1130",
-      "name": "Schedule 11:30 AM",
+      "id": "cron-0630",
+      "name": "Schedule: 6:30 AM",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
-      "position": [240, 300]
+      "position": [240, 350]
     },
     {
       "parameters": {
         "rule": {
-          "interval": [
-            {
-              "field": "cronExpression",
-              "expression": "30 16 * * *"
-            }
-          ],
+          "interval": [{ "field": "cronExpression", "expression": "30 11 * * *" }],
           "timezone": "Australia/Adelaide"
         }
       },
-      "id": "schedule-1630",
-      "name": "Schedule 4:30 PM",
+      "id": "cron-1130",
+      "name": "Schedule: 11:30 AM",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
-      "position": [240, 400]
+      "position": [240, 450]
     },
     {
       "parameters": {
         "rule": {
-          "interval": [
-            {
-              "field": "cronExpression",
-              "expression": "30 21 * * *"
-            }
-          ],
+          "interval": [{ "field": "cronExpression", "expression": "30 16 * * *" }],
           "timezone": "Australia/Adelaide"
         }
       },
-      "id": "schedule-2130",
-      "name": "Schedule 9:30 PM",
+      "id": "cron-1630",
+      "name": "Schedule: 4:30 PM",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
-      "position": [240, 500]
+      "position": [240, 550]
     },
     {
       "parameters": {
-        "command": "bash /app/wake_claude.sh",
-        "workingDirectory": "/app"
+        "rule": {
+          "interval": [{ "field": "cronExpression", "expression": "30 21 * * *" }],
+          "timezone": "Australia/Adelaide"
+        }
       },
-      "id": "execute-wake",
-      "name": "Wake Claude",
+      "id": "cron-2130",
+      "name": "Schedule: 9:30 PM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 650]
+    },
+    {
+      "parameters": {
+        "command": "=claude --continue -p \"Ping: Session alive. Current time: $(date). Summarize last task if any.\""
+      },
+      "id": "exec-wake",
+      "name": "Execute: Wake Claude",
       "type": "n8n-nodes-base.executeCommand",
       "typeVersion": 1,
-      "position": [500, 350],
-      "onError": "continueErrorOutput"
+      "position": [500, 450],
+      "continueOnFail": true
     },
     {
       "parameters": {
         "conditions": {
-          "string": [
+          "number": [
             {
               "value1": "={{ $json.exitCode }}",
-              "operation": "notEquals",
-              "value2": "0"
+              "operation": "notEqual",
+              "value2": 0
             }
           ]
         }
       },
-      "id": "check-error",
-      "name": "Check for Errors",
+      "id": "if-error",
+      "name": "Check Exit Code",
       "type": "n8n-nodes-base.if",
-      "typeVersion": 1,
-      "position": [720, 350]
+      "typeVersion": 2,
+      "position": [720, 450]
     },
     {
       "parameters": {
-        "chatId": "YOUR_TELEGRAM_CHAT_ID",
-        "text": "=⚠️ Claude Wake Failed at {{ $now.format('YYYY-MM-DD HH:mm:ss') }}\n\n❌ Error: {{ $json.stderr || 'Unknown error' }}\n\n📋 Exit Code: {{ $json.exitCode }}\n\n🔍 Check logs: /app/logs/wake.log",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "timestamp",
+              "name": "timestamp",
+              "value": "={{ $now.format('YYYY-MM-DD HH:mm:ss z') }}",
+              "type": "string"
+            },
+            {
+              "id": "status",
+              "name": "status",
+              "value": "={{ $json.exitCode === 0 ? 'SUCCESS ✓' : 'FAILED ✗' }}",
+              "type": "string"
+            },
+            {
+              "id": "output",
+              "name": "output",
+              "value": "={{ $json.stdout || $json.stderr || 'No output' }}",
+              "type": "string"
+            },
+            {
+              "id": "exitCode",
+              "name": "exitCode",
+              "value": "={{ $json.exitCode }}",
+              "type": "number"
+            }
+          ]
+        }
+      },
+      "id": "format-log",
+      "name": "Format Log Entry",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [940, 350]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "fileName": "/app/logs/n8n-executions.log",
+        "text": "={{ $json.timestamp }} | {{ $json.status }} | Exit: {{ $json.exitCode }}\nOutput: {{ $json.output }}\n========================================\n"
+      },
+      "id": "write-log",
+      "name": "Write to Log File",
+      "type": "n8n-nodes-base.writeFile",
+      "typeVersion": 1,
+      "position": [1160, 350]
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_CHAT_ID_HERE",
+        "text": "=⚠️ **Claude Wake FAILED**\n\n🕐 Time: {{ $('Format Log Entry').item.json.timestamp }}\n❌ Exit Code: `{{ $('Format Log Entry').item.json.exitCode }}`\n\n📝 Output:\n```\n{{ $('Format Log Entry').item.json.output.substring(0, 500) }}\n```\n\n🔍 Full logs: `/app/logs/n8n-executions.log`",
         "additionalFields": {
-          "parseMode": "Markdown"
+          "parse_mode": "Markdown"
         }
       },
       "id": "telegram-alert",
       "name": "Send Telegram Alert",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
-      "position": [940, 450],
+      "position": [940, 550],
       "credentials": {
         "telegramApi": {
-          "id": "1",
+          "id": "telegram-bot",
           "name": "Telegram Bot"
         }
       }
-    },
-    {
-      "parameters": {
-        "operation": "append",
-        "fileName": "/app/logs/n8n-executions.log",
-        "text": "={{ $now.format('YYYY-MM-DD HH:mm:ss') }} | Status: {{ $json.exitCode === 0 ? 'SUCCESS' : 'FAILED' }} | Output: {{ $json.stdout || $json.stderr }}\n"
-      },
-      "id": "log-execution",
-      "name": "Log Execution",
-      "type": "n8n-nodes-base.writeFile",
-      "typeVersion": 1,
-      "position": [940, 250]
     }
   ],
   "connections": {
-    "Schedule 6:30 AM": {
+    "Manual Trigger (Test)": {
+      "main": [[{ "node": "Execute: Wake Claude", "type": "main", "index": 0 }]]
+    },
+    "Schedule: 6:30 AM": {
+      "main": [[{ "node": "Execute: Wake Claude", "type": "main", "index": 0 }]]
+    },
+    "Schedule: 11:30 AM": {
+      "main": [[{ "node": "Execute: Wake Claude", "type": "main", "index": 0 }]]
+    },
+    "Schedule: 4:30 PM": {
+      "main": [[{ "node": "Execute: Wake Claude", "type": "main", "index": 0 }]]
+    },
+    "Schedule: 9:30 PM": {
+      "main": [[{ "node": "Execute: Wake Claude", "type": "main", "index": 0 }]]
+    },
+    "Execute: Wake Claude": {
+      "main": [[{ "node": "Check Exit Code", "type": "main", "index": 0 }]]
+    },
+    "Check Exit Code": {
       "main": [
+        [{ "node": "Format Log Entry", "type": "main", "index": 0 }],
         [
-          {
-            "node": "Wake Claude",
-            "type": "main",
-            "index": 0
-          }
+          { "node": "Send Telegram Alert", "type": "main", "index": 0 },
+          { "node": "Format Log Entry", "type": "main", "index": 0 }
         ]
       ]
     },
-    "Schedule 11:30 AM": {
-      "main": [
-        [
-          {
-            "node": "Wake Claude",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Schedule 4:30 PM": {
-      "main": [
-        [
-          {
-            "node": "Wake Claude",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Schedule 9:30 PM": {
-      "main": [
-        [
-          {
-            "node": "Wake Claude",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Wake Claude": {
-      "main": [
-        [
-          {
-            "node": "Check for Errors",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Check for Errors": {
-      "main": [
-        [
-          {
-            "node": "Log Execution",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Send Telegram Alert",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Log Execution",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+    "Format Log Entry": {
+      "main": [[{ "node": "Write to Log File", "type": "main", "index": 0 }]]
     }
   },
   "active": false,
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveManualExecutions": true
   },
-  "versionId": "1",
-  "meta": {
-    "instanceId": "claude-wake-scheduler"
-  },
-  "tags": []
+  "tags": [],
+  "pinData": {}
 }

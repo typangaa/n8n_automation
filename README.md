@@ -88,7 +88,18 @@ After deployment completes:
 2. Login with credentials (admin / your-password)
 3. Go to **Workflows** → Click **"Import from File"**
 4. Upload `n8n-workflow.json` from this repo
-5. The workflow will appear with 4 schedule nodes
+5. The workflow will appear with:
+   - **5 trigger nodes**: Manual (for testing) + 4 schedule triggers (Adelaide times)
+   - **Execute Command node**: Runs `claude --continue -p "..."`  directly (no script file needed)
+   - **Format Log Entry node**: Processes output with timestamp and status
+   - **Write to Log File node**: Appends to `/app/logs/n8n-executions.log`
+   - **Send Telegram Alert node**: Notifies on failures
+
+**Key Feature: Embedded Logic**
+- All Claude commands run directly in the workflow
+- Full execution output visible in n8n UI
+- No external script files needed
+- Easy to debug and modify
 
 ### 3. Configure Telegram Notifications
 
@@ -144,18 +155,40 @@ xvfb-run claude
 # Token is saved to ./claude-auth volume
 ```
 
-### 5. Activate Workflow
+### 5. Test & Activate Workflow
 
-1. In n8n, open the workflow
-2. Click **"Activate"** toggle (top right)
-3. Status changes to **Active** ✅
+**Test the Workflow:**
 
-**Test Immediately:**
+1. In n8n, open the imported workflow
+2. Click on **"Manual Trigger (Test)"** node
+3. Click **"Execute Workflow"** button (top right)
+4. Watch the execution flow through each node
+5. **View Full Output:**
+   - Click on **"Execute: Wake Claude"** node after execution
+   - See `stdout`, `stderr`, and `exitCode` in the output panel
+   - Click on **"Format Log Entry"** to see processed data
+   - All execution data is visible right in the UI!
 
-- Click on **"Wake Claude"** node
-- Click **"Execute Node"** at bottom
-- Check output in execution panel
-- Verify log file: `/app/logs/wake.log`
+**Activate for Scheduled Runs:**
+
+1. After successful test, click **"Activate"** toggle (top right)
+2. Status changes to **Active** ✅
+3. Workflow will now run automatically at scheduled times
+
+**Viewing Logs:**
+
+All execution data is visible in two places:
+
+1. **n8n UI (Best for debugging)**:
+   - Go to **Executions** tab
+   - Click any execution to see full details
+   - Every node's input/output is recorded
+   - Filter by success/error status
+   - Search by date/time
+
+2. **Log File (For historical data)**:
+   - Railway Shell: `cat /app/logs/n8n-executions.log`
+   - Each entry includes: timestamp, status, exit code, full output
 
 ## Local Development
 
