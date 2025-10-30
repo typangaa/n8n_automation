@@ -1,5 +1,0 @@
-# Wake at 6:30 AM, 11:30 AM, 4:30 PM, 9:30 PM (UTC)
-30 6 * * * /app/wake_claude.sh >> /var/log/wake.log 2>&1
-30 11 * * * /app/wake_claude.sh >> /var/log/wake.log 2>&1
-30 16 * * * /app/wake_claude.sh >> /var/log/wake.log 2>&1
-30 21 * * * /app/wake_claude.sh >> /var/log/wake.log 2>&1

@@ -1,0 +1,228 @@
+{
+  "name": "Claude Wake Scheduler - Adelaide",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "30 6 * * *"
+            }
+          ],
+          "timezone": "Australia/Adelaide"
+        }
+      },
+      "id": "schedule-0630",
+      "name": "Schedule 6:30 AM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 200]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "30 11 * * *"
+            }
+          ],
+          "timezone": "Australia/Adelaide"
+        }
+      },
+      "id": "schedule-1130",
+      "name": "Schedule 11:30 AM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "30 16 * * *"
+            }
+          ],
+          "timezone": "Australia/Adelaide"
+        }
+      },
+      "id": "schedule-1630",
+      "name": "Schedule 4:30 PM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 400]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "30 21 * * *"
+            }
+          ],
+          "timezone": "Australia/Adelaide"
+        }
+      },
+      "id": "schedule-2130",
+      "name": "Schedule 9:30 PM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 500]
+    },
+    {
+      "parameters": {
+        "command": "bash /app/wake_claude.sh",
+        "workingDirectory": "/app"
+      },
+      "id": "execute-wake",
+      "name": "Wake Claude",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [500, 350],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.exitCode }}",
+              "operation": "notEquals",
+              "value2": "0"
+            }
+          ]
+        }
+      },
+      "id": "check-error",
+      "name": "Check for Errors",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [720, 350]
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_TELEGRAM_CHAT_ID",
+        "text": "=⚠️ Claude Wake Failed at {{ $now.format('YYYY-MM-DD HH:mm:ss') }}\n\n❌ Error: {{ $json.stderr || 'Unknown error' }}\n\n📋 Exit Code: {{ $json.exitCode }}\n\n🔍 Check logs: /app/logs/wake.log",
+        "additionalFields": {
+          "parseMode": "Markdown"
+        }
+      },
+      "id": "telegram-alert",
+      "name": "Send Telegram Alert",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [940, 450],
+      "credentials": {
+        "telegramApi": {
+          "id": "1",
+          "name": "Telegram Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "fileName": "/app/logs/n8n-executions.log",
+        "text": "={{ $now.format('YYYY-MM-DD HH:mm:ss') }} | Status: {{ $json.exitCode === 0 ? 'SUCCESS' : 'FAILED' }} | Output: {{ $json.stdout || $json.stderr }}\n"
+      },
+      "id": "log-execution",
+      "name": "Log Execution",
+      "type": "n8n-nodes-base.writeFile",
+      "typeVersion": 1,
+      "position": [940, 250]
+    }
+  ],
+  "connections": {
+    "Schedule 6:30 AM": {
+      "main": [
+        [
+          {
+            "node": "Wake Claude",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule 11:30 AM": {
+      "main": [
+        [
+          {
+            "node": "Wake Claude",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule 4:30 PM": {
+      "main": [
+        [
+          {
+            "node": "Wake Claude",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule 9:30 PM": {
+      "main": [
+        [
+          {
+            "node": "Wake Claude",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wake Claude": {
+      "main": [
+        [
+          {
+            "node": "Check for Errors",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check for Errors": {
+      "main": [
+        [
+          {
+            "node": "Log Execution",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Telegram Alert",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Log Execution",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1",
+  "meta": {
+    "instanceId": "claude-wake-scheduler"
+  },
+  "tags": []
+}

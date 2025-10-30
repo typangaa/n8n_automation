@@ -1,41 +1,28 @@
-# Use Ubuntu 22.04 for stability and easy package management
-FROM ubuntu:22.04
+# Use official n8n base image
+FROM n8nio/n8n:latest
 
-# Avoid interactive prompts
-ENV DEBIAN_FRONTEND=noninteractive
+# Switch to root to install system packages
+USER root
 
-# Install essentials + Node.js 20 + curl
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-      ca-certificates \
-      curl \
-      gnupg \
-      cron \
-      xvfb \
-      && rm -rf /var/lib/apt/lists/*
-
-# Install Node.js 20
-RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
-    apt-get install -y nodejs && \
-    npm install -g npm@latest
+# Install xvfb for headless Claude OAuth authentication
+RUN apk add --no-cache xvfb xvfb-run
 
 # Install Claude Code CLI globally
 RUN npm install -g @anthropic-ai/claude-code
 
-# Create app directory
+# Create app directory and logs directory
 WORKDIR /app
+RUN mkdir -p /app/logs
 
 # Copy scripts
-COPY wake_claude.sh entrypoint.sh crontab ./
+COPY wake_claude.sh ./
+RUN chmod +x wake_claude.sh
 
-# Make scripts executable
-RUN chmod +x wake_claude.sh entrypoint.sh
+# Switch back to node user (n8n default)
+USER node
 
-# Install crontab
-RUN crontab crontab
+# Expose n8n default port
+EXPOSE 5678
 
-# Expose nothing (headless)
-EXPOSE 3000
-
-# Run entrypoint
-CMD ["/app/entrypoint.sh"]
+# Use n8n's default entrypoint
+CMD ["n8n", "start"]
