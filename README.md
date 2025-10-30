@@ -38,24 +38,47 @@ n8n Workflow
 # 1. Visit https://railway.app
 # 2. New Project → Deploy from GitHub
 # 3. Select typangaa/n8n_automation
-# 4. Add environment variables (see below)
+# 4. Wait for initial deployment to complete
 ```
 
-**Required Railway Environment Variables:**
+**Step 1: Generate Public Domain**
+
+IMPORTANT: Do this FIRST before adding environment variables!
+
+1. Go to your Railway project → Service → **Settings**
+2. Click **Generate Domain** (under Networking)
+3. Copy the generated URL (e.g., `https://n8n-production-9d52.up.railway.app`)
+
+**Step 2: Add Environment Variables**
+
+Go to **Variables** tab and add these (replace `your-app.up.railway.app` with YOUR actual Railway URL from Step 1):
 
 ```env
+# n8n Public URL Configuration (CRITICAL!)
+WEBHOOK_URL=https://your-app.up.railway.app/
+N8N_EDITOR_BASE_URL=https://your-app.up.railway.app
+N8N_PROTOCOL=https
+N8N_HOST=your-app.up.railway.app
+
+# Authentication (CHANGE THE PASSWORD!)
 N8N_BASIC_AUTH_ACTIVE=true
 N8N_BASIC_AUTH_USER=admin
 N8N_BASIC_AUTH_PASSWORD=your-secure-password-here
+
+# Timezone
 GENERIC_TIMEZONE=Australia/Adelaide
 TZ=Australia/Adelaide
-N8N_HOST=0.0.0.0
-N8N_PORT=5678
+
+# Optional: Security
+N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
 ```
 
-**Optional: Enable Public URL:**
-- Go to Settings → Generate Domain
-- Save the URL (e.g., `https://your-app.up.railway.app`)
+**Step 3: Redeploy**
+
+After adding variables:
+- Click **Deploy** → **Redeploy** (or Railway will auto-redeploy)
+- Wait for deployment to complete
+- Access n8n at your Railway URL
 
 ### 2. Import Workflow to n8n
 
@@ -213,6 +236,42 @@ All times in **Australia/Adelaide** (handles DST automatically):
 n8n automatically adjusts for daylight saving time changes.
 
 ## Troubleshooting
+
+### n8n Shows "localhost:5678" Instead of Railway URL
+
+**Symptom:** n8n displays `Editor is now accessible via: http://localhost:5678` instead of your Railway public URL
+
+**Solution:**
+
+1. **Check Environment Variables** in Railway dashboard:
+   ```bash
+   # These MUST be set with your actual Railway URL:
+   WEBHOOK_URL=https://n8n-production-9d52.up.railway.app/
+   N8N_EDITOR_BASE_URL=https://n8n-production-9d52.up.railway.app
+   N8N_PROTOCOL=https
+   N8N_HOST=n8n-production-9d52.up.railway.app
+   ```
+
+2. **Verify Railway Generated Domain:**
+   - Go to Settings → Networking
+   - Ensure domain is generated (not disabled)
+   - Copy the exact URL
+
+3. **Update Variables:**
+   - Replace all instances of `localhost:5678` with your Railway URL
+   - Remove `N8N_PORT=5678` if present (Railway auto-assigns PORT)
+   - Remove `N8N_HOST=0.0.0.0` if present
+
+4. **Redeploy:**
+   - Save variables
+   - Deploy → Redeploy
+   - Check logs for: `Editor is now accessible via: https://your-app.up.railway.app`
+
+**Common Mistakes:**
+- ❌ Forgot trailing slash in `WEBHOOK_URL` (should be `...app/`)
+- ❌ Used `http://` instead of `https://`
+- ❌ Set `N8N_HOST=0.0.0.0` (this forces localhost mode)
+- ❌ Didn't redeploy after changing variables
 
 ### Claude Authentication Fails
 
