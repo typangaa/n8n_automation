@@ -41,24 +41,23 @@ n8n Workflow
 # 4. Wait for initial deployment to complete
 ```
 
-**Step 1: Generate Public Domain**
+**Step 1: Verify Public Domain**
 
-IMPORTANT: Do this FIRST before adding environment variables!
-
-1. Go to your Railway project → Service → **Settings**
-2. Click **Generate Domain** (under Networking)
-3. Copy the generated URL (e.g., `https://n8n-production-9d52.up.railway.app`)
+Your Railway deployment URL:
+```
+https://n8nautomation-production-7a8c.up.railway.app
+```
 
 **Step 2: Add Environment Variables**
 
-Go to **Variables** tab and add these (replace `your-app.up.railway.app` with YOUR actual Railway URL from Step 1):
+Go to Railway Dashboard → **Variables** tab and add these:
 
 ```env
-# n8n Public URL Configuration (CRITICAL!)
-WEBHOOK_URL=https://your-app.up.railway.app/
-N8N_EDITOR_BASE_URL=https://your-app.up.railway.app
+# n8n Public URL Configuration
+WEBHOOK_URL=https://n8nautomation-production-7a8c.up.railway.app/
+N8N_EDITOR_BASE_URL=https://n8nautomation-production-7a8c.up.railway.app
 N8N_PROTOCOL=https
-N8N_HOST=your-app.up.railway.app
+N8N_HOST=n8nautomation-production-7a8c.up.railway.app
 
 # Authentication (CHANGE THE PASSWORD!)
 N8N_BASIC_AUTH_ACTIVE=true
@@ -78,13 +77,13 @@ N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
 After adding variables:
 - Click **Deploy** → **Redeploy** (or Railway will auto-redeploy)
 - Wait for deployment to complete
-- Access n8n at your Railway URL
+- Access n8n at: https://n8nautomation-production-7a8c.up.railway.app
 
 ### 2. Import Workflow to n8n
 
 After deployment completes:
 
-1. Open your n8n instance: `https://your-app.up.railway.app`
+1. Open your n8n instance: https://n8nautomation-production-7a8c.up.railway.app
 2. Login with credentials (admin / your-password)
 3. Go to **Workflows** → Click **"Import from File"**
 4. Upload `n8n-workflow.json` from this repo
@@ -279,10 +278,10 @@ n8n automatically adjusts for daylight saving time changes.
 1. **Check Environment Variables** in Railway dashboard:
    ```bash
    # These MUST be set with your actual Railway URL:
-   WEBHOOK_URL=https://n8n-production-9d52.up.railway.app/
-   N8N_EDITOR_BASE_URL=https://n8n-production-9d52.up.railway.app
+   WEBHOOK_URL=https://n8nautomation-production-7a8c.up.railway.app/
+   N8N_EDITOR_BASE_URL=https://n8nautomation-production-7a8c.up.railway.app
    N8N_PROTOCOL=https
-   N8N_HOST=n8n-production-9d52.up.railway.app
+   N8N_HOST=n8nautomation-production-7a8c.up.railway.app
    ```
 
 2. **Verify Railway Generated Domain:**
@@ -298,7 +297,7 @@ n8n automatically adjusts for daylight saving time changes.
 4. **Redeploy:**
    - Save variables
    - Deploy → Redeploy
-   - Check logs for: `Editor is now accessible via: https://your-app.up.railway.app`
+   - Check logs for: `Editor is now accessible via: https://n8nautomation-production-7a8c.up.railway.app`
 
 **Common Mistakes:**
 - ❌ Forgot trailing slash in `WEBHOOK_URL` (should be `...app/`)
@@ -403,6 +402,31 @@ cat /app/logs/wake.log
 - Restart deployment (Deploy → Redeploy)
 - Clear build cache (Settings → Clear Cache)
 - Check for conflicting environment variables
+
+### Health Check Configuration
+
+**Current Setup (Already Configured ✅)**
+
+Railway is configured to check n8n's built-in health endpoint:
+
+```toml
+# railway.toml
+healthcheckPath = "/healthz"
+healthcheckTimeout = 600  # 10 minutes
+```
+
+**How it Works:**
+1. Railway hits: `https://n8nautomation-production-7a8c.up.railway.app/healthz`
+2. n8n responds with: `{"status": "ok"}` when ready
+3. Railway marks service as healthy and routes traffic
+
+**Why This is Needed:**
+- ✅ Prevents "train has not arrived" errors
+- ✅ Ensures n8n fully starts before accepting traffic
+- ✅ Waits for database migrations to complete
+- ✅ 600s timeout allows for slow npm installs
+
+**You don't need to change anything** - this is already correctly configured!
 
 ## File Structure
 
